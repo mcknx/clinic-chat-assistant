@@ -1,0 +1,12 @@
+[
+ {"id":"1-hook","text":"A dental clinic answers the same questions all day. After hours, nobody is there to answer, and nobody books."},
+ {"id":"2-ask","text":"On Bayview Dental's website, a visitor asks what whitening costs. This is a live call to Claude."},
+ {"id":"3-price","text":"The answer comes from the clinic's own info sheet, not from guessing."},
+ {"id":"4-unknown","text":"Another visitor asks about something the sheet doesn't cover."},
+ {"id":"5-handoff","text":"So the assistant doesn't make it up. It hands the chat to a team member."},
+ {"id":"6-book","text":"A third visitor wants a cleaning. The assistant collects what the clinic needs, then offers real open slots."},
+ {"id":"7-booked","text":"They pick one, and it's booked."},
+ {"id":"8-inbox","text":"At the front desk, staff see it all: the new lead, the booking, and the chat that needs a human."},
+ {"id":"9-flow","text":"Behind it is one n8n workflow. New message. Load the clinic info. Claude decides. Save the lead, booking or handoff. Reply."},
+ {"id":"10-end","text":"Built by McKeen Asma, AI Automation V A, with n8n and Claude."}
+]

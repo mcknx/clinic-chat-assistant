@@ -1,0 +1,282 @@
+{
+  "id": "vaP2ChatAssistant",
+  "name": "VA P2 — Clinic Chat Assistant",
+  "active": true,
+  "settings": {},
+  "connections": {
+    "Chat": {
+      "main": [
+        [
+          {
+            "node": "Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid?": {
+      "main": [
+        [
+          {
+            "node": "Load context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bad request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load context": {
+      "main": [
+        [
+          {
+            "node": "Build prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build prompt": {
+      "main": [
+        [
+          {
+            "node": "Ask Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Claude": {
+      "main": [
+        [
+          {
+            "node": "Parse reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse reply": {
+      "main": [
+        [
+          {
+            "node": "Save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save": {
+      "main": [
+        [
+          {
+            "node": "Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodes": [
+    {
+      "id": "c1",
+      "name": "Chat",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "va-p2-chat",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "c8",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        120,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "v1",
+              "leftValue": "={{ typeof $json.body?.session === 'string' ? $json.body.session.trim() : '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "v2",
+              "leftValue": "={{ typeof $json.body?.message === 'string' ? $json.body.message.trim() : '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "c9",
+      "name": "Bad request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        200
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { error: \"session and message are required (non-empty strings)\" } }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "c2",
+      "name": "Load context",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vaPgLocal",
+          "name": "VA Postgres (local)"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select\n  (select body from kb where id = 1) as kb,\n  (select coalesce(json_agg(json_build_object('role', role, 'content', content) order by id), '[]')\n     from (select id, role, content from chat_messages where session = $1 order by id desc limit 12) h) as history,\n  (select row_to_json(l) from (select name, service, patient_type, preferred_day, status from chat_leads where session = $1) l) as lead,\n  (select coalesce(json_agg(json_build_object(\n       'iso', to_char(starts_at at time zone 'Asia/Manila', 'YYYY-MM-DD\"T\"HH24:MI:SS\"+08:00\"'),\n       'label', to_char(starts_at at time zone 'Asia/Manila', 'Dy DD Mon HH12AM')) order by starts_at), '[]')\n     from slots where booked_by is null and starts_at > now() and starts_at < now() + interval '8 days') as slots",
+        "options": {
+          "queryReplacement": "={{ [String($json.body.session || '').slice(0, 100)] }}"
+        }
+      }
+    },
+    {
+      "id": "c3",
+      "name": "Build prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const c = $input.first().json;\nconst msg = String($('Chat').first().json.body.message || '').slice(0, 2000);\nconst slots = c.slots || [];\nconst history = (c.history || []).map(h => (h.role === 'user' ? 'VISITOR' : 'ASSISTANT') + ': ' + h.content).join('\\n');\nconst prompt = [\n  'You are the website chat assistant of Bayview Dental (Davao City). Answer ONLY using CLINIC INFO below. If the answer is not in CLINIC INFO, say you\\'ll get a team member and set action \"handoff\". If the visitor asks for a human, set action \"handoff\".',\n  'Collect, one question at a time and only if missing: service, patient_type (new or returning), preferred_day. Ask for their first name before booking.',\n  'When service, patient_type, preferred_day and name are known, offer up to 3 times from OPEN SLOTS on or after that day. When the visitor picks one, set action \"book\" and booking.starts_at to that exact slot value.',\n  'Keep replies under 60 words, warm, no emoji.',\n  'Return ONLY JSON: {\"reply\": string, \"fields\": {\"name\"?:string,\"service\"?:string,\"patient_type\"?:\"new\"|\"returning\",\"preferred_day\"?:string}, \"action\": \"none\"|\"book\"|\"handoff\", \"booking\": {\"starts_at\": string} | null}',\n  'CLINIC INFO: ' + (c.kb || ''),\n  'OPEN SLOTS (ISO, Asia/Manila):\\n' + (slots.length ? slots.map(s => s.iso + ' ' + s.label).join('\\n') : 'none'),\n  'KNOWN FIELDS: ' + JSON.stringify(c.lead || {}),\n  'CONVERSATION: ' + (history || '(new conversation)'),\n  'VISITOR: ' + msg,\n].join('\\n');\nreturn [{ json: { prompt, slots } }];"
+      }
+    },
+    {
+      "id": "c4",
+      "name": "Ask Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8788/reply",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ prompt: $json.prompt }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "c5",
+      "name": "Parse reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const fallback = { reply: 'Sorry, let me get a team member to help.', fields: {}, action: 'handoff', booking: null };\nconst slots = $('Build prompt').first().json.slots || [];\nlet r;\ntry {\n  if (typeof $input.first().json.text !== 'string') throw new Error('bridge failed');\n  const t = $input.first().json.text.replace(/```(?:json)?/g, '');\n  r = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1));\n  if (typeof r.reply !== 'string' || !r.reply.trim()) throw new Error('no reply');\n} catch (e) { r = fallback; }\nconst fields = {};\nfor (const k of ['name', 'service', 'patient_type', 'preferred_day']) {\n  const v = r.fields && r.fields[k];\n  if (typeof v === 'string' && v.trim()) fields[k] = v.trim().slice(0, 100);\n}\nif (fields.patient_type) fields.patient_type = fields.patient_type.toLowerCase();\nlet action = ['none', 'book', 'handoff'].includes(r.action) ? r.action : 'none';\nlet booking = null;\nif (action === 'book') {\n  const want = Date.parse(r.booking && r.booking.starts_at);\n  const hit = slots.find(s => Date.parse(s.iso) === want);\n  if (hit) booking = { starts_at: hit.iso }; else action = 'none';\n}\nreturn [{ json: { reply: r.reply, fields, action, booking } }];"
+      }
+    },
+    {
+      "id": "c6",
+      "name": "Save",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1200,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "vaPgLocal",
+          "name": "VA Postgres (local)"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "with b as (\n  update slots set booked_by = $1\n  where $8 = 'book' and starts_at = nullif($9, '')::timestamptz and booked_by is null\n  returning starts_at\n), r as (\n  select case when $8 = 'book' and not exists (select 1 from b) then\n    'Sorry, that time was just taken. Other open times: ' || coalesce((\n      select string_agg(to_char(starts_at at time zone 'Asia/Manila', 'Dy DD Mon HH12:MI AM'), ', ' order by starts_at)\n      from (select starts_at from slots where booked_by is null and starts_at > now()\n              and starts_at >= date_trunc('day', nullif($9, '')::timestamptz at time zone 'Asia/Manila') at time zone 'Asia/Manila'\n              and starts_at <> nullif($9, '')::timestamptz order by starts_at limit 3) a), 'none this week, a team member will help') || '. Which works for you?'\n  else $3 end as reply\n), m as (\n  insert into chat_messages (session, role, content)\n  select $1, 'user', $2 union all select $1, 'assistant', reply from r returning 1\n), l as (\n  insert into chat_leads (session, name, service, patient_type, preferred_day, status)\n  values ($1, nullif($4, ''), nullif($5, ''), nullif($6, ''), nullif($7, ''),\n          case when exists (select 1 from b) then 'booked' when $8 = 'handoff' then 'handoff' else 'open' end)\n  on conflict (session) do update set\n    name = coalesce(excluded.name, chat_leads.name),\n    service = coalesce(excluded.service, chat_leads.service),\n    patient_type = coalesce(excluded.patient_type, chat_leads.patient_type),\n    preferred_day = coalesce(excluded.preferred_day, chat_leads.preferred_day),\n    status = case when exists (select 1 from b) then 'booked' when $8 = 'handoff' then 'handoff' else chat_leads.status end,\n    updated_at = now()\n  returning status\n)\nselect (select reply from r) as reply,\n       (select status from l) as status,\n       (select count(*) from m) as saved,\n       (select to_char(starts_at at time zone 'Asia/Manila', 'YYYY-MM-DD\"T\"HH24:MI:SS\"+08:00\"') from b) as booked_at",
+        "options": {
+          "queryReplacement": "={{ [String($('Chat').item.json.body.session || '').slice(0, 100), String($('Chat').item.json.body.message || '').slice(0, 2000), $('Parse reply').item.json.reply, $('Parse reply').item.json.fields.name || '', $('Parse reply').item.json.fields.service || '', $('Parse reply').item.json.fields.patient_type || '', $('Parse reply').item.json.fields.preferred_day || '', $('Parse reply').item.json.action, $('Parse reply').item.json.booking ? $('Parse reply').item.json.booking.starts_at : ''] }}"
+        }
+      }
+    },
+    {
+      "id": "c7",
+      "name": "Reply",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { reply: $json.reply, fields: $('Parse reply').item.json.fields, action: $json.booked_at ? 'book' : ($('Parse reply').item.json.action === 'book' ? 'none' : $('Parse reply').item.json.action), booking: $json.booked_at ? { starts_at: $json.booked_at } : null } }}"
+      }
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clinic Chat Assistant with n8n + Claude | Case Study</title>
+<meta name="description" content="Case study: a website chat assistant for a dental clinic, built with n8n + Claude. It answers from the clinic's info sheet, hands unknown questions to staff, and books a real open slot in about 11 seconds per reply. Built by McKeen Asma, AI Automation VA.">
+<meta name="author" content="McKeen Asma">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Clinic chat assistant: answers, hands off and books appointments">
+<meta property="og:description" content="Website chat → n8n → Claude decides → lead, booking or handoff saved → reply. A real recorded run, with the booking conversation word for word and the video transcript.">
+<meta property="og:image" content="img/poster.jpg">
+<meta property="og:image:width" content="900">
+<meta property="og:image:height" content="506">
+<meta property="og:image:alt" content="Bayview Dental website with the chat assistant answering a whitening price question">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Clinic chat assistant: answers, hands off and books appointments">
+<meta name="twitter:description" content="An n8n + Claude chat assistant that answers from the clinic's own info, books open slots, and hands the rest to a person. Real run, real replies.">
+<meta name="twitter:image" content="img/poster.jpg">
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--ink:#14212b;--muted:#5a6b78;--line:#dde3e8;--accent:#0f7c86;--accent-soft:#e3f3f4;--hot:#e0662b}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1519;--card:#172026;--ink:#e6edf1;--muted:#9aabb6;--line:#2a3640;--accent:#4fc1ca;--accent-soft:#16343a;--hot:#ff8a52}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:32px 16px 56px}
+h1{font-size:clamp(26px,6vw,36px);line-height:1.2;margin:.2em 0 .3em}
+h2{font-size:21px;margin:40px 0 10px}
+p{margin:0 0 12px}
+.tag{display:inline-block;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.lede{font-size:19px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat b{display:block;font-size:28px;color:var(--accent);line-height:1.2}
+.stat span{font-size:14px;color:var(--muted)}
+figure{margin:16px 0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+figure img{display:block;width:100%;height:auto;border-radius:8px}
+figcaption{font-size:14px;color:var(--muted);padding:8px 4px 0}
+svg{display:block;width:100%;height:auto}
+.box{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.box.ai{stroke:var(--accent);stroke-width:2}
+.t1{fill:var(--ink);font:600 15px system-ui,sans-serif}
+.t2{fill:var(--muted);font:13px system-ui,sans-serif}
+.arrow{stroke:var(--accent);stroke-width:2;fill:none}
+.reply{background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;white-space:pre-line;font-size:16px}
+ol,ul{padding-left:22px;margin:0 0 12px}
+li{margin:6px 0}
+.note{font-size:14px;color:var(--muted)}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:15px}
+a{color:var(--accent)}
+</style>
+<style>
+h3{font-size:17px;margin:20px 0 4px}
+blockquote{margin:0 0 16px}
+.transcript p{margin:0 0 10px}
+.transcript time{display:inline-block;min-width:3.2em;font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.chat{margin:0 0 16px;padding:0;list-style:none}
+.chat li{margin:0 0 10px;padding:10px 14px;border-radius:10px;font-size:16px}
+.chat .v{background:var(--card);border:1px solid var(--line);margin-left:15%}
+.chat .a{background:var(--accent-soft);border-left:4px solid var(--accent);margin-right:15%}
+.chat small{display:block;font-size:13px;color:var(--muted)}
+.next{margin:24px 0 0;font-size:16px}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Clinic chat assistant: answers from the clinic's info, books real open slots, hands the rest to a person","description":"Case study of an n8n + Claude website chat assistant for a demo dental clinic: it answers from the clinic's info sheet, hands unknown questions to staff, qualifies the visitor and books an open slot, with every lead, booking and handoff saved to Postgres.","image":"img/poster.jpg","inLanguage":"en","datePublished":"2026-10-08","author":{"@type":"Person","name":"McKeen Asma","jobTitle":"AI Automation VA","url":"https://mckenneth.vercel.app","address":{"@type":"PostalAddress","addressLocality":"Davao City","addressCountry":"PH"}},"about":["AI chatbot","appointment booking","lead qualification","n8n workflow automation","Claude AI"],"keywords":"AI chat assistant, chatbot, appointment booking, lead qualification, n8n, Claude, virtual assistant, dental clinic, Postgres"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoObject","name":"Clinic chat assistant demo (n8n + Claude)","description":"89-second demo: on a demo dental clinic's website, the chat assistant answers a price question from the clinic's info sheet, hands an unknown insurance question to a team member, qualifies a new patient and books a Saturday slot, and the front desk sees all three. Waiting time is trimmed and captioned; the on-screen timer shows real time.","thumbnailUrl":"img/poster.jpg","contentUrl":"demo/p2-demo.mp4","uploadDate":"2026-10-08","duration":"PT1M29S","inLanguage":"en","creator":{"@type":"Person","name":"McKeen Asma"},"transcript":"A dental clinic answers the same questions all day. After hours, nobody is there to answer, and nobody books. On Bayview Dental's website, a visitor asks what whitening costs. This is a live call to Claude. The answer comes from the clinic's own info sheet, not from guessing. Another visitor asks about something the sheet doesn't cover. So the assistant doesn't make it up. It hands the chat to a team member. A third visitor wants a cleaning. The assistant collects what the clinic needs, then offers real open slots. They pick one, and it's booked. At the front desk, staff see it all: the new lead, the booking, and the chat that needs a human. Behind it is one n8n workflow. New message. Load the clinic info. Claude decides. Save the lead, booking or handoff. Reply. Built by McKeen Asma, AI Automation VA, with n8n and Claude."}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Will the assistant make things up?","acceptedAnswer":{"@type":"Answer","text":"It is told to answer only from the clinic's info sheet. When a question isn't covered, like PhilHealth Konsulta in the demo, it says so and hands the chat to a team member instead of guessing. AI can still get things wrong, so every message is saved where staff can read it."}},{"@type":"Question","name":"Can it double-book a slot?","acceptedAnswer":{"@type":"Answer","text":"The workflow only books a time that is in the open-slots list, and the database update only succeeds if that slot is still free. If someone else just took that time, the assistant says so and offers the next open times. If Claude names a time that isn't on the open list, no booking is saved."}},{"@type":"Question","name":"Does it work with my calendar or Facebook Messenger?","acceptedAnswer":{"@type":"Answer","text":"Not in this demo, which uses its own slots table and a website chat widget. n8n has Google Calendar nodes, so the slots could come from your calendar, and Messenger would need a Meta developer app connected to your Page. The decide-and-save steps stay the same."}},{"@type":"Question","name":"How long does it take to set up?","acceptedAnswer":{"@type":"Answer","text":"I have not set this up for a paying client yet, so I won't quote a number from history. What it takes: your info sheet (services, prices, hours, HMOs), your booking calendar, access to your website, and testing with real questions your patients ask."}},{"@type":"Question","name":"What does it cost to run?","acceptedAnswer":{"@type":"Answer","text":"Two running costs: hosting n8n (self-hosted on a small server, or an n8n Cloud plan) and AI usage, billed per reply by the AI provider. I would estimate both from your monthly chat volume before we start."}}]}
+</script>
+</head>
+<body>
+<main>
+<article>
+<header>
+<span class="tag">Case study · AI chat assistant</span>
+<h1>Clinic chat assistant: answers patients and books them in, even when the front desk is busy</h1>
+<p class="lede">Patients ask a clinic the same things all day: prices, hours, "do you take my HMO?". This chat on the clinic's website answers them, books an open time, and passes anything it isn't sure about to a staff member. Your team sees every chat on one simple board.</p>
+<p class="code-link"><a href="https://github.com/mcknx/clinic-chat-assistant">View the code on GitHub →</a></p>
+</header>
+
+<figure id="demo-video"><video controls preload="metadata" playsinline src="demo/p2-demo.mp4" poster="img/poster.jpg" style="display:block;width:100%;height:auto;border-radius:8px" aria-describedby="transcript-intro"></video><figcaption>The 89-second demo, narrated in my own voice (AI voice clone). The video trims the waiting time and says so on screen; the on-screen timer shows the real time. Prefer reading? The <a href="#transcript">full transcript</a> is below.</figcaption></figure>
+
+<div class="stats">
+<div class="stat"><b>Booked in 2 messages</b><span>a new patient said what she needed, picked a time, done</span></div>
+<div class="stat"><b>About 7–11 seconds</b><span>for each answer in the recorded test</span></div>
+<div class="stat"><b>No guessing</b><span>the one question it couldn't answer went to a staff member</span></div>
+</div>
+
+<section id="real-booking">
+<h2>The real booking conversation, word for word</h2>
+<p>A real chat from the recorded test. The assistant wrote both replies on the spot; nothing is pre-written.</p>
+<ol class="chat">
+<li class="v"><small>Visitor</small>Hi, I'd like a cleaning. I'm a new patient, Saturday works best. My name is Ana.</li>
+<li class="a"><small>Assistant · 10.5 s</small>Hi Ana, welcome to Bayview Dental. Teeth cleaning is ₱1,500. On Saturday, 10 Oct, we have 9AM, 10AM or 11AM open. Which time works best for you?</li>
+<li class="v"><small>Visitor</small>The first time works for me.</li>
+<li class="a"><small>Assistant · 10.6 s · booked Sat 10 Oct, 9:00 AM</small>Great choice, Ana. You're booked for teeth cleaning on Saturday, 10 Oct at 9AM at Bayview Dental. If you need to cancel or move it, please give at least 24 hours notice. See you then!</li>
+</ol>
+<p>It noted her name, that she is a new patient, the service and the day, and took 9:00 AM off the open list so nobody else can book it.</p>
+<figure><img src="img/booked.jpg" width="900" height="506" alt="The Bayview Dental chat widget showing Ana's booking confirmed, with a 'Booked, Sat 9:00 AM' chip under the reply"><figcaption>The visitor sees the confirmation in the chat.</figcaption></figure>
+<figure><img src="img/inbox.jpg" width="900" height="506" loading="lazy" alt="The front-desk board with three columns: a new lead asking about whitening, Ana booked for Sat Oct 10 9:00 AM, and a visitor's PhilHealth question that needs a human"><figcaption>The front desk sees the new lead, the booking and the chat that needs a person, on one board.</figcaption></figure>
+</section>
+
+<section id="problem">
+<h2>The problem: the same questions all day, and nobody there after hours</h2>
+<p>Clinic staff answer prices, hours and "do you take my HMO?" all day. After hours nobody answers, so nobody books.</p>
+</section>
+
+<section id="results">
+<h2>Results (measured in the recorded run)</h2>
+<ul>
+<li><b>Price question:</b> "How much is teeth whitening?" answered in <b>6.8 s</b>: "Teeth whitening starts from ₱8,000. The dentist confirms the final price after a check-up."</li>
+<li><b>Question not on the sheet:</b> "Do you accept PhilHealth Konsulta?" In <b>8.3 s</b> it said the sheet lists Maxicare and Intellicare but not PhilHealth Konsulta, and <b>handed the chat to a team member</b>.</li>
+<li><b>Booking:</b> qualified and offered Saturday 9, 10 or 11 AM in <b>10.5 s</b>; booked Sat 10 Oct, 9:00 AM in <b>10.6 s</b>.</li>
+<li><b>3 of 3 chats</b> showed up on the front-desk board in the right column.</li>
+</ul>
+<p class="note">Honest note: Bayview Dental is a demo clinic I made up, and there is no paying client here. The workflow, the replies and the timings are real, from one recorded run. The video trims the waiting time and says so on screen; the timer shows the real time.</p>
+</section>
+
+<section id="how-it-works">
+<h2>How it works: five steps</h2>
+<p>Each message a patient sends goes through the same five steps, automatically:</p>
+<svg viewBox="0 0 360 250" style="max-width:520px;margin:0 auto" role="img" aria-label="Five steps: new message, load clinic info and history, Claude decides, save lead or booking or handoff, reply">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--accent)"/></marker></defs>
+<rect class="box" x="4" y="4" width="150" height="70" rx="12"/>
+<text class="t1" x="79" y="36" text-anchor="middle">1. New message</text>
+<text class="t2" x="79" y="56" text-anchor="middle">website chat</text>
+<rect class="box" x="206" y="4" width="150" height="70" rx="12"/>
+<text class="t1" x="281" y="36" text-anchor="middle">2. Load context</text>
+<text class="t2" x="281" y="56" text-anchor="middle">info, history, slots</text>
+<rect class="box ai" x="206" y="176" width="150" height="70" rx="12"/>
+<text class="t1" x="281" y="208" text-anchor="middle">3. Claude decides</text>
+<text class="t2" x="281" y="228" text-anchor="middle">answer, book, hand off</text>
+<rect class="box" x="4" y="176" width="150" height="70" rx="12"/>
+<text class="t1" x="79" y="208" text-anchor="middle">4. Save</text>
+<text class="t2" x="79" y="228" text-anchor="middle">lead, booking, handoff</text>
+<rect class="box" x="4" y="90" width="150" height="70" rx="12" style="stroke-dasharray:4 3"/>
+<text class="t1" x="79" y="122" text-anchor="middle">5. Reply</text>
+<text class="t2" x="79" y="142" text-anchor="middle">to the visitor</text>
+<path class="arrow" d="M156 39H202" marker-end="url(#ah)"/>
+<path class="arrow" d="M281 76V172" marker-end="url(#ah)"/>
+<path class="arrow" d="M204 211H158" marker-end="url(#ah)"/>
+<path class="arrow" d="M79 174V164" marker-end="url(#ah)"/>
+</svg>
+<ol>
+<li><b>New message.</b> The patient types in the chat on your website.</li>
+<li><b>Look things up.</b> Your clinic info sheet, the chat so far, and the open appointment times.</li>
+<li><b>AI decides.</b> Answer the question, ask the next thing it needs (service, new or returning, which day, name), book a time, or pass the chat to staff. If anything goes wrong, it passes to staff.</li>
+<li><b>Save.</b> The chat, the patient's details, and the booking (only if that time is still free) or the "needs a human" flag.</li>
+<li><b>Reply.</b> The patient reads the answer; your team sees it on the board.</li>
+</ol>
+</section>
+
+<section id="handoff">
+<h2>When it doesn't know, a person takes over</h2>
+<figure><img src="img/handoff.jpg" width="900" height="506" loading="lazy" alt="The chat widget answering that the info sheet lists Maxicare and Intellicare but not PhilHealth Konsulta, with a 'Handed to a team member' chip"><figcaption>Not on the info sheet, so no guessing: the chat is flagged for a team member.</figcaption></figure>
+</section>
+
+<section id="tools">
+<h2>Tools used</h2>
+<ul>
+<li><b>n8n</b> (self-hosted): the workflow (Webhook, Postgres, Code, HTTP Request and Respond to Webhook nodes).</li>
+<li><b>Claude</b> (Anthropic): reads the chat and decides the reply and action.</li>
+<li><b>Postgres</b>: messages, leads, open slots and the clinic info sheet.</li>
+</ul>
+<p><a href="https://github.com/mcknx/clinic-chat-assistant">View the code on GitHub →</a> (workflow, schema, demo scripts, MIT licence)</p>
+</section>
+
+<section id="setup">
+<h2>How I'd set this up for your business</h2>
+<ol>
+<li><b>You give me</b> your info sheet: services, prices, hours, HMOs, policies.</li>
+<li><b>I connect</b> your booking calendar and your website (or another channel).</li>
+<li><b>We test it together</b> with real patient questions until the replies sound like you, and agree what always goes to a person.</li>
+<li><b>Your team works from one board</b>: new leads, bookings, and chats that need a human.</li>
+</ol>
+</section>
+
+<section id="faq">
+<h2>FAQ</h2>
+<h3>Will the assistant make things up?</h3>
+<p>It is told to answer only from the clinic&#x27;s info sheet. When a question isn&#x27;t covered, like PhilHealth Konsulta in the demo, it says so and hands the chat to a team member instead of guessing. AI can still get things wrong, so every message is saved where staff can read it.</p>
+<h3>Can it double-book a slot?</h3>
+<p>The workflow only books a time that is in the open-slots list, and the database update only succeeds if that slot is still free. If someone else just took that time, the assistant says so and offers the next open times. If Claude names a time that isn&#x27;t on the open list, no booking is saved.</p>
+<h3>Does it work with my calendar or Facebook Messenger?</h3>
+<p>Not in this demo, which uses its own slots table and a website chat widget. n8n has Google Calendar nodes, so the slots could come from your calendar, and Messenger would need a Meta developer app connected to your Page. The decide-and-save steps stay the same.</p>
+<h3>How long does it take to set up?</h3>
+<p>I have not set this up for a paying client yet, so I won&#x27;t quote a number from history. What it takes: your info sheet (services, prices, hours, HMOs), your booking calendar, access to your website, and testing with real questions your patients ask.</p>
+<h3>What does it cost to run?</h3>
+<p>Two running costs: hosting n8n (self-hosted on a small server, or an n8n Cloud plan) and AI usage, billed per reply by the AI provider. I would estimate both from your monthly chat volume before we start.</p>
+</section>
+
+<section id="transcript" class="transcript">
+<h2>Video transcript</h2>
+<p id="transcript-intro" class="note">Full narration of the 89-second demo video, with start times.</p>
+<p><time>0:00</time> A dental clinic answers the same questions all day. After hours, nobody is there to answer, and nobody books.</p>
+<p><time>0:08</time> On Bayview Dental&#x27;s website, a visitor asks what whitening costs. This is a live call to Claude.</p>
+<p><time>0:16</time> The answer comes from the clinic&#x27;s own info sheet, not from guessing.</p>
+<p><time>0:22</time> Another visitor asks about something the sheet doesn&#x27;t cover.</p>
+<p><time>0:30</time> So the assistant doesn&#x27;t make it up. It hands the chat to a team member.</p>
+<p><time>0:36</time> A third visitor wants a cleaning. The assistant collects what the clinic needs, then offers real open slots.</p>
+<p><time>0:55</time> They pick one, and it&#x27;s booked.</p>
+<p><time>1:01</time> At the front desk, staff see it all: the new lead, the booking, and the chat that needs a human.</p>
+<p><time>1:10</time> Behind it is one n8n workflow. New message. Load the clinic info. Claude decides. Save the lead, booking or handoff. Reply.</p>
+<p><time>1:22</time> Built by McKeen Asma, AI Automation VA, with n8n and Claude.</p>
+</section>
+
+<p class="next">Same clinic, the lead form: <a href="https://mckenneth.vercel.app/case-studies/ai-lead-responder/">AI lead responder case study</a></p>
+
+<footer>
+<b>McKeen Asma</b> · AI Automation VA · Davao, Philippines<br>
+Portfolio: <a href="https://mckenneth.vercel.app">mckenneth.vercel.app</a>
+</footer>
+</article>
+</main>
+</body>
+</html>

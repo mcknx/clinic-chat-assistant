@@ -1,0 +1,258 @@
+{
+  "turns": [
+    {
+      "n": 1,
+      "visitor": "v1",
+      "message": "Hi! How much is teeth whitening?",
+      "reply": "Teeth whitening starts from ₱8,000. The dentist confirms the final price after a check-up. Would you like to book an appointment for whitening?",
+      "action": "none",
+      "fields": {
+        "service": "Teeth whitening"
+      },
+      "booking": null,
+      "seconds": 6.8
+    },
+    {
+      "n": 2,
+      "visitor": "v2",
+      "message": "Do you accept PhilHealth Konsulta?",
+      "reply": "Good question. Our info sheet lists Maxicare and Intellicare, but not PhilHealth Konsulta. I'll get a team member to confirm that for you.",
+      "action": "handoff",
+      "fields": {},
+      "booking": null,
+      "seconds": 8.3
+    },
+    {
+      "n": 3,
+      "visitor": "v3",
+      "message": "Hi, I'd like a cleaning. I'm a new patient, Saturday works best. My name is Ana.",
+      "reply": "Hi Ana, welcome to Bayview Dental. Teeth cleaning is ₱1,500. On Saturday, 10 Oct, we have 9AM, 10AM or 11AM open. Which time works best for you?",
+      "action": "none",
+      "fields": {
+        "name": "Ana",
+        "service": "Teeth cleaning",
+        "patient_type": "new",
+        "preferred_day": "Saturday"
+      },
+      "booking": null,
+      "seconds": 10.5
+    },
+    {
+      "n": 4,
+      "visitor": "v3",
+      "message": "The first time works for me.",
+      "reply": "Great choice, Ana. You're booked for teeth cleaning on Saturday, 10 Oct at 9AM at Bayview Dental. If you need to cancel or move it, please give at least 24 hours notice. See you then!",
+      "action": "book",
+      "fields": {
+        "name": "Ana",
+        "service": "Teeth cleaning",
+        "patient_type": "new",
+        "preferred_day": "Saturday"
+      },
+      "booking": {
+        "starts_at": "2026-10-10T09:00:00+08:00"
+      },
+      "seconds": 10.6
+    }
+  ],
+  "marks": {
+    "title": 0.04,
+    "chat": 8.15,
+    "sent1": 12.14,
+    "replied1": 18.95,
+    "new2": 22.57,
+    "sent2": 25.88,
+    "replied2": 34.15,
+    "new3": 40,
+    "sent3": 44.99,
+    "replied3": 55.5,
+    "new4": 59.14,
+    "sent4": 61.39,
+    "replied4": 71.97,
+    "readdone": 77.85,
+    "inbox": 79.25,
+    "flow": 88.37,
+    "end": 100.38,
+    "stop": 106.38
+  },
+  "inbox": "NEW LEADS\n1\nVisitor\n1 min ago\nService\nTeeth whitening\nBOOKED\n1\nAna\nNEW\njust now\nService\nTeeth cleaning\nPatient\nNew\nPreferred\nSaturday\n✓ Sat, Oct 10, 9:00 AM\nNEEDS A HUMAN\n1\nVisitor\njust now\n“Do you accept PhilHealth Konsulta?”",
+  "plan": [
+    {
+      "id": "1-hook",
+      "kind": "hold",
+      "ss": 0,
+      "src": 8.11,
+      "dur": 8.54,
+      "at": 0,
+      "vs": 0.4,
+      "ch": 0,
+      "cut": 0
+    },
+    {
+      "id": "2-ask",
+      "kind": "live",
+      "ss": 7.85,
+      "src": 3.99,
+      "dur": 3.99,
+      "at": 8.54,
+      "vs": 8.94,
+      "ch": 1,
+      "cut": 0
+    },
+    {
+      "id": null,
+      "kind": "wait",
+      "ss": 11.84,
+      "src": 6.81,
+      "dur": 4,
+      "at": 12.53,
+      "vs": null,
+      "ch": 1,
+      "cut": 2.8
+    },
+    {
+      "id": "3-price",
+      "kind": "hold",
+      "ss": 18.65,
+      "src": 3.62,
+      "dur": 5.77,
+      "at": 16.53,
+      "vs": 16.93,
+      "ch": 1,
+      "cut": 0
+    },
+    {
+      "id": "4-unknown",
+      "kind": "live",
+      "ss": 22.27,
+      "src": 3.31,
+      "dur": 3.31,
+      "at": 22.3,
+      "vs": 22.7,
+      "ch": 2,
+      "cut": 0
+    },
+    {
+      "id": null,
+      "kind": "wait",
+      "ss": 25.58,
+      "src": 8.27,
+      "dur": 4,
+      "at": 25.61,
+      "vs": null,
+      "ch": 2,
+      "cut": 4.3
+    },
+    {
+      "id": "5-handoff",
+      "kind": "hold",
+      "ss": 33.85,
+      "src": 5.85,
+      "dur": 6.28,
+      "at": 29.61,
+      "vs": 30.01,
+      "ch": 2,
+      "cut": 0
+    },
+    {
+      "id": "6-book",
+      "kind": "live",
+      "ss": 39.7,
+      "src": 4.99,
+      "dur": 4.99,
+      "at": 35.89,
+      "vs": 36.29,
+      "ch": 3,
+      "cut": 0
+    },
+    {
+      "id": null,
+      "kind": "wait",
+      "ss": 44.69,
+      "src": 10.51,
+      "dur": 4,
+      "at": 40.88,
+      "vs": null,
+      "ch": 3,
+      "cut": 6.5
+    },
+    {
+      "id": null,
+      "kind": "live",
+      "ss": 55.2,
+      "src": 3.64,
+      "dur": 3.64,
+      "at": 44.88,
+      "vs": null,
+      "ch": 3,
+      "cut": 0
+    },
+    {
+      "id": null,
+      "kind": "live",
+      "ss": 58.84,
+      "src": 2.25,
+      "dur": 2.25,
+      "at": 48.52,
+      "vs": null,
+      "ch": 3,
+      "cut": 0
+    },
+    {
+      "id": null,
+      "kind": "wait",
+      "ss": 61.09,
+      "src": 10.58,
+      "dur": 4,
+      "at": 50.77,
+      "vs": null,
+      "ch": 3,
+      "cut": 6.6
+    },
+    {
+      "id": "7-booked",
+      "kind": "hold",
+      "ss": 71.67,
+      "src": 5.88,
+      "dur": 5.88,
+      "at": 54.77,
+      "vs": 55.17,
+      "ch": 3,
+      "cut": 0
+    },
+    {
+      "id": "8-inbox",
+      "kind": "hold",
+      "ss": 78.95,
+      "src": 9.12,
+      "dur": 9.12,
+      "at": 60.65,
+      "vs": 61.05,
+      "ch": 4,
+      "cut": 0
+    },
+    {
+      "id": "9-flow",
+      "kind": "hold",
+      "ss": 88.07,
+      "src": 12.01,
+      "dur": 12.26,
+      "at": 69.77,
+      "vs": 70.17,
+      "ch": 5,
+      "cut": 0
+    },
+    {
+      "id": "10-end",
+      "kind": "hold",
+      "ss": 100.08,
+      "src": 6,
+      "dur": 6.51,
+      "at": 82.03,
+      "vs": 82.43,
+      "ch": 6,
+      "cut": 0
+    }
+  ],
+  "seconds": 88.54
+}
