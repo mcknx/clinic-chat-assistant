@@ -3,7 +3,29 @@
 A chat on a dental clinic's website that answers from the clinic's info sheet, books a real open appointment slot, and hands anything it doesn't know to a person.
 The front desk sees every conversation, lead, booking and handoff in an inbox.
 
-Live case study (with the demo video): https://mckenneth.vercel.app/case-studies/clinic-chat-assistant/
+**What this proves:** an n8n workflow that sends a website chat to Claude, answers only from the clinic's info sheet, books a slot only if Postgres says it is still open, and hands anything else to a person. `./check.sh` asserts all three end to end.
+
+[![Demo: a visitor asks a price, asks about an unknown HMO (handed to staff), then books a cleaning; the front-desk inbox shows all three](demo/demo.gif)](demo/p2-demo.mp4)
+
+13-second preview at 5x speed. Click it for the full 89-second narrated demo (`demo/p2-demo.mp4`).
+
+**Live case study:** https://mckenneth.vercel.app/case-studies/clinic-chat-assistant/
+
+**End-to-end check**, run on 16 Oct 2026 against the Docker stack below with live Claude calls (real output, replies shortened with …):
+
+```text
+$ ./check-bridge.sh
+bridge ok
+state ok
+$ ./check.sh
+{"reply":"Teeth whitening starts from ₱8,000. The dentist confirms the final price after a check-up. …","action":"none","booking":null}
+{"reply":"We accept Maxicare and Intellicare. For PhilHealth Konsulta or any other HMO or insurance, our staff can confirm for you. …","action":"handoff","booking":null}
+{"reply":"You're booked, Ana: a teeth cleaning on Saturday 17 Oct at 9AM at Bayview Dental, …","action":"book","booking":{"starts_at":"2026-10-17T09:00:00+08:00"}}
+p2 ok: booked
+p2 ok: one slot
+```
+
+**Caveat:** demo for a fictional clinic (Bayview Dental), not client work. No real patients; prices and HMOs in `knowledge.md` are made up. Claude is reached through a local bridge to the `claude` CLI (see Honest notes).
 
 ## Architecture
 
